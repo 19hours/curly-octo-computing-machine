@@ -1,49 +1,33 @@
 import express from "express";
-import { Transform } from "stream"; // Import Node.js stream utilities
+import compression from "compression"; // Import compression middleware
 
 const app = express();
 const port = 4001;
+
+// Apply compression middleware globally
+app.use(compression());
 
 app.get("/", async (req, res) => {
   // Set headers for Server-Sent Events (SSE)
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("Connection", "keep-alive");
-  res.setHeader("Content-Encoding", "none");
+  res.flushHeaders(); // Ensure headers are sent immediately
 
-  // Create a Transform stream to handle the streaming of data
-  const transformStream = new Transform({
-    transform(chunk, encoding, callback) {
-      callback(null, chunk);
-    },
-  });
-
-  // Start streaming data to the client
-  const streamData = async () => {
-    for (let i = 0; i < 10; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second between sending data
-      const message = `data: ${i}\n\n`;
-      transformStream.write(message); // Write data to the transform stream
-    }
-
-    transformStream.end(); // End the stream when done
-  };
-
-  try {
-    await streamData(); // Start streaming
-  } catch (error) {
-    console.error("Error occurred during streaming", error);
-    transformStream.write("data: An error occurred during streaming\n\n");
-    transformStream.end();
+  // Stream data to the client
+  for (let i = 0; i < 10; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
+    const message = `data: ${i}\n\n`; // Correct SSE format
+    res.write(message); // Send data to the client
+    res.flush(); // Ensure data is flushed immediately
   }
 
-  // Pipe the transform stream to the response
-  transformStream.pipe(res);
+  // End the stream when done
+  res.end();
 });
 
-// Start the server
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`Server running on port ${port}`);
 });
 
 export default app;
