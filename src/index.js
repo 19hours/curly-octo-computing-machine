@@ -1,34 +1,48 @@
 import express from "express";
-import compression from "compression"; // Import compression middleware
+import { Readable } from "stream"; // Use Node.js Readable stream
+import { TextEncoder } from "util"; // Use TextEncoder from Node.js
 
 const app = express();
 const port = 4001;
 
-// Apply compression middleware globally
-app.use(compression());
-
-app.get("/", async (req, res) => {
+app.get("/", (req, res) => {
   // Set headers for Server-Sent Events (SSE)
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+  res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache, no-transform");
-  res.setHeader("X-Accel-Buffering", "no");
-  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Connection", "keep-alive");
 
-  // Stream data to the client
-  for (let i = 0; i < 10; i++) {
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
-    const message = `data: ${i}\n\n`; // Correct SSE format
-    res.write(message); // Send data to the client
-    res.flush(); // Ensure data is flushed immediately
-  }
+  // Use TextEncoder to encode the streamed messages
+  const encoder = new TextEncoder();
 
-  // End the stream when done
-  res.end();
+  // Counter to control the number of messages sent
+  let i = 0;
+
+  // Create a custom Readable stream that controls when to push data
+  const customReadable = new Readable({
+    async read() {
+      if (i === 0) {
+        // Send the initial message
+        this.push(encoder.encode("data: Basic Streaming Test\n\n"));
+        i++;
+      } else if (i <= 10) {
+        // Send a message every second
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const message = `data: ${i - 1}\n\n`; // Send 0 to 9 as the message
+        this.push(encoder.encode(message)); // Push the message to the stream
+        i++;
+      } else {
+        // End the stream after 10 messages
+        this.push(null); // Signal the end of the stream
+      }
+    },
+  });
+
+  // Pipe the readable stream into the response
+  customReadable.pipe(res);
 });
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
 
 export default app;
