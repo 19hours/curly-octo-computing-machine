@@ -12,7 +12,7 @@ app.get("/", async (req, res) => {
   res.writeHead(200, {
     Connection: "keep-alive",
     "Content-Encoding": "none",
-    "Cache-Control": "no-cache",
+    "Cache-Control": "no-cache, no-transform",
     "Content-Type": "text/event-stream",
   });
   res.flushHeaders(); // Ensure headers are sent immediately
