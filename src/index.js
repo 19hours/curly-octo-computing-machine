@@ -9,9 +9,12 @@ app.use(compression());
 
 app.get("/", async (req, res) => {
   // Set headers for Server-Sent Events (SSE)
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache, no-transform");
-  res.setHeader("Connection", "keep-alive");
+  res.writeHead(200, {
+    Connection: "keep-alive",
+    "Content-Encoding": "none",
+    "Cache-Control": "no-cache",
+    "Content-Type": "text/event-stream",
+  });
   res.flushHeaders(); // Ensure headers are sent immediately
 
   // Stream data to the client
