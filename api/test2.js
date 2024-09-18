@@ -2,11 +2,6 @@ import express from "express";
 
 const app = express();
 
-// Example: Express route
-app.get("/hello", (req, res) => {
-  res.status(200).json({ message: "Hello from Express inside Next.js!" });
-});
-
 app.get("/", (req, res) => {
   // Set headers for Server-Sent Events (SSE)
   res.setHeader("Content-Type", "text/event-stream");
@@ -43,11 +38,6 @@ app.get("/", (req, res) => {
 
   // Pipe the readable stream into the response
   customReadable.pipe(res);
-});
-
-// Express error handler
-app.use((err, req, res, next) => {
-  res.status(500).json({ error: err.message });
 });
 
 export const GET = (req, res) => {
