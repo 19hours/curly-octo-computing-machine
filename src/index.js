@@ -3,8 +3,6 @@ const express = require("express");
 const app = express();
 const port = 4001;
 
-export const dynamic = "force-dynamic"; // defaults to auto
-
 app.get("/", async (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache, no-transform");
