@@ -9,13 +9,10 @@ app.use(compression());
 
 app.get("/", async (req, res) => {
   // Set headers for Server-Sent Events (SSE)
-  res.writeHead(200, {
-    Connection: "keep-alive",
-    "Content-Encoding": "none",
-    "Cache-Control": "no-cache, no-transform",
-    "Content-Type": "text/event-stream",
-  });
-  res.flushHeaders(); // Ensure headers are sent immediately
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("X-Accel-Buffering", "no");
 
   // Stream data to the client
   for (let i = 0; i < 10; i++) {
