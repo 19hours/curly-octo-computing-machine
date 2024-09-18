@@ -13,6 +13,7 @@ app.get("/", async (req, res) => {
   res.setHeader("Content-Type", "text/event-stream;charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("X-Accel-Buffering", "no");
+  res.setHeader("X-Content-Type-Options", "nosniff");
 
   // Stream data to the client
   for (let i = 0; i < 10; i++) {
