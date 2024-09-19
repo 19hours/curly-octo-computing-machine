@@ -1,27 +1,24 @@
-import { Readable } from "stream";
+const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
-export default async function handler(req, res) {
-  // Create a readable stream
-  const stream = new Readable({
-    async read() {
-      this.push("Basic Streaming Test\n"); // Initial message
+export default async function handler() {
+  const encoder = new TextEncoder();
 
-      for (let i = 0; i < 10; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
-
-        const message = `data: ${i}\n\n`; // SSE format
-        this.push(message); // Push each message to the stream
-      }
-
-      this.push(null); // End the stream
+  const readable = new ReadableStream({
+    async start(controller) {
+      controller.enqueue(encoder.encode("<html><body>"));
+      await delay(500);
+      controller.enqueue(encoder.encode("<ul><li>List Item 1</li>"));
+      await delay(500);
+      controller.enqueue(encoder.encode("<li>List Item 2</li>"));
+      await delay(500);
+      controller.enqueue(encoder.encode("<li>List Item 3</li></ul>"));
+      await delay(500);
+      controller.enqueue(encoder.encode("</body></html>"));
+      controller.close();
     },
   });
 
-  // Set headers for Server-Sent Events (SSE)
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-
-  // Pipe the readable stream to the response
-  stream.pipe(res);
+  return new Response(readable, {
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
 }
