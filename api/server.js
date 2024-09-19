@@ -1,58 +1,27 @@
-const express = require("express");
-const next = require("next");
+import { Readable } from "stream";
 
-const dev = process.env.NODE_ENV !== "production";
-const app = next({ dev });
-const handle = app.getRequestHandler();
+export default async function handler(req, res) {
+  // Create a readable stream
+  const stream = new Readable({
+    async read() {
+      this.push("Basic Streaming Test\n"); // Initial message
 
-app.prepare().then(() => {
-  const server = express();
+      for (let i = 0; i < 10; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
 
-  // Custom Express route
-  server.get("/api/custom-route", (req, res) => {
-    res.json({ message: "Hello from Express!" });
-  });
-
-  server.get("/api/test400", (req, res) => {
-    // Set headers for Server-Sent Events (SSE)
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache, no-transform");
-    res.setHeader("Connection", "keep-alive");
-
-    // Flush the headers immediately
-    res.flushHeaders();
-
-    // Counter to control the number of messages sent
-    let i = 0;
-
-    // Create a custom Readable stream that controls when to push data
-    const customReadable = new Readable({
-      read() {},
-    });
-
-    // Send the initial message
-    customReadable.push("data: Basic Streaming Test\n\n");
-    res.flush(); // Immediately flush the first message
-
-    // Send a message every second
-    const interval = setInterval(() => {
-      if (i < 10) {
-        customReadable.push(`data: ${i}\n\n`); // Send 0 to 9 as the message
-        res.flush(); // Flush each message immediately
-        i++;
-      } else {
-        // End the stream after 10 messages
-        customReadable.push(null); // Signal the end of the stream
-        clearInterval(interval);
+        const message = `data: ${i}\n\n`; // SSE format
+        this.push(message); // Push each message to the stream
       }
-    }, 1000);
 
-    // Pipe the readable stream into the response
-    customReadable.pipe(res);
+      this.push(null); // End the stream
+    },
   });
 
-  server.listen(3000, (err) => {
-    if (err) throw err;
-    console.log("> Ready on http://localhost:3000");
-  });
-});
+  // Set headers for Server-Sent Events (SSE)
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  // Pipe the readable stream to the response
+  stream.pipe(res);
+}
