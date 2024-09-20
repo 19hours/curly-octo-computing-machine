@@ -3,6 +3,10 @@ const express = require("express");
 const app = express();
 const port = 4001;
 
+app.get("/hello", (req, res) => {
+  res.send("Hello World!");
+});
+
 app.get("/", async (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache, no-transform");
